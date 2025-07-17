@@ -1,0 +1,35 @@
+.search-bar {
+  text-align: center;
+  padding: 40px 20px 20px;
+  background-color: white;
+}
+
+.search-bar h2 {
+  color: var(--primary-color);
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.input-group select,
+.input-group input {
+  padding: 8px 12px;
+  font-size: 16px;
+}
+
+.input-group button {
+  padding: 8px 16px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.input-group button:hover {
+  background-color: #e66900;
+}

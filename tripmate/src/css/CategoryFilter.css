@@ -1,0 +1,20 @@
+.category-filter {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.category-filter button {
+  margin: 5px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--primary-color);
+  background-color: white;
+  color: var(--primary-color);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.category-filter button:hover {
+  background-color: var(--primary-color);
+  color: white;
+}

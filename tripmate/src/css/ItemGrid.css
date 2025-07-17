@@ -1,0 +1,25 @@
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  padding: 30px 60px;
+  background-color: white;
+}
+
+.grid-item {
+  text-align: center;
+}
+
+.grid-item img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.grid-item p {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text-color);
+}
