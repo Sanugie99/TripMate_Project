@@ -47,7 +47,7 @@ export const fetchSchedules = async (localUser) => {
     }
 };
 
-//여행 계획 일정 공유
+// 여행 계획 일정 공유
 export const fetchSharedSchedules = async (userId) => {
     if (!userId) {
         console.warn("userId 없음, fetchSharedSchedules 중단");
@@ -99,6 +99,25 @@ export const shareSchedule = async (scheduleId) => {
     }
 };
 
+// 스케줄 공유 취소
+export const unshareSchedule = async (scheduleId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        throw new Error("로그인이 필요합니다.");
+    }
+    try {
+        const response = await api.put(`/schedule/${scheduleId}/share`, { isPublic: false }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("🚨 unshareSchedule 에러:", error);
+        throw error;
+    }
+};
+
 // 스케줄 업데이트
 export const updateSchedule = async (scheduleId, scheduleData) => {
     const token = localStorage.getItem("token");
@@ -115,6 +134,25 @@ export const updateSchedule = async (scheduleId, scheduleData) => {
         return response.data;
     } catch (error) {
         console.error("🚨 updateSchedule 에러:", error);
+        throw error;
+    }
+};
+
+// 스케줄 ID로 조회
+export const fetchScheduleById = async (scheduleId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        throw new Error("로그인이 필요합니다.");
+    }
+    try {
+        const response = await api.get(`/schedule/${scheduleId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`🚨 fetchScheduleById 에러 (ID: ${scheduleId}):`, error);
         throw error;
     }
 };
@@ -145,3 +183,43 @@ export const fetchSavedSchedules = async () => {
         throw error;
     }
 };
+
+// --- Review API ---
+
+export const getReviewsBySchedule = async (scheduleId) => {
+    try {
+        const response = await api.get(`/reviews/schedule/${scheduleId}`);
+        return response.data;
+    } catch (error) {
+        console.error(`🚨 getReviewsBySchedule 에러 (Schedule ID: ${scheduleId}):`, error);
+        throw error;
+    }
+};
+
+export const createReview = async (scheduleId, content) => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("로그인이 필요합니다.");
+    try {
+        const response = await api.post('/reviews', { scheduleId, content }, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("🚨 createReview 에러:", error);
+        throw error;
+    }
+};
+
+export const deleteReview = async (reviewId) => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("로그인이 필요합니다.");
+    try {
+        await api.delete(`/reviews/${reviewId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+    } catch (error) {
+        console.error(`🚨 deleteReview 에러 (Review ID: ${reviewId}):`, error);
+        throw error;
+    }
+};
+

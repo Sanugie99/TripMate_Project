@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useParams, useNavigate,useLocation } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { updateSchedule } from '../api/UserApi';
+import { updateSchedule, getReviewsBySchedule, createReview, deleteReview } from '../api/UserApi'; // 리뷰 API 추가
 import dayjs from 'dayjs';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,8 +11,9 @@ import { FaThumbsUp, FaThumbsDown, FaShareSquare } from 'react-icons/fa';
 import ScheduleMapComponent from '../components/map/ScheduleMapComponent';
 import PlaceSearchBar from '../components/schedule/PlaceSearchBar';
 import { Button } from '../components/common/StyledComponents';
+import ReviewSection from '../components/review/ReviewSection'; // 리뷰 컴포넌트 import
 
-// --- Styled Components ---
+// --- Styled Components (기존과 동일) ---
 const Container = styled.div`
   display: flex;
   height: 90vh;
@@ -158,6 +159,7 @@ const SmallButton = styled(Button)`
   width: 60px;
 `;
 
+
 // --- Edit Modal Component ---
 function getDates(startDate, endDate) {
   const dates = [];
@@ -172,15 +174,29 @@ function getDates(startDate, endDate) {
 
 function ScheduleEditModal({ schedule, onClose, onSave }) {
   const [editableSchedule, setEditableSchedule] = useState(() => {
-    const sanitizedPlaces = (schedule.places || []).map(place => ({
+    const places = schedule.places || [];
+    let minDateStr = schedule.startDate;
+    let maxDateStr = schedule.endDate;
+
+    if (places.length > 0) {
+      const validDates = places.map(p => dayjs(p.date)).filter(d => d.isValid());
+      if (validDates.length > 0) {
+        const minDate = validDates.reduce((min, p) => p.isBefore(min) ? p : min, validDates[0]);
+        const maxDate = validDates.reduce((max, p) => p.isAfter(max) ? p : max, validDates[0]);
+        minDateStr = minDate.format('YYYY-MM-DD');
+        maxDateStr = maxDate.format('YYYY-MM-DD');
+      }
+    }
+
+    const sanitizedPlaces = places.map(place => ({
       ...place,
-      id: place.id || uuidv4(), // Ensure unique ID
-      date: place.date ? dayjs(place.date).format('YYYY-MM-DD') : dayjs(schedule.startDate).format('YYYY-MM-DD')
+      id: place.id || uuidv4(),
     }));
+
     return {
       ...schedule,
-      startDate: schedule.startDate ? dayjs(schedule.startDate).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
-      endDate: schedule.endDate ? dayjs(schedule.endDate).format('YYYY-MM-DD') : dayjs(schedule.startDate).format('YYYY-MM-DD'),
+      startDate: dayjs(minDateStr).isValid() ? minDateStr : dayjs().format('YYYY-MM-DD'),
+      endDate: dayjs(maxDateStr).isValid() ? maxDateStr : minDateStr,
       places: sanitizedPlaces
     };
   });
@@ -338,12 +354,13 @@ function ScheduleDetailFull() {
   const navigate = useNavigate();
 
   const [schedule, setSchedule] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
-   const [selectedPlace, setSelectedPlace] = useState(null);
+
+  const [selectedPlace, setSelectedPlace] = useState(null);
 
   // fromMypage일 때 localStorage에서 우선 불러오기
   useEffect(() => {
@@ -374,7 +391,33 @@ function ScheduleDetailFull() {
     // eslint-disable-next-line
   }, [id, fromMypage]);
 
-  const fetchSchedule = useCallback(async () => {
+
+  const setSanitizedSchedule = (rawData) => {
+    const sanitized = {
+      ...rawData,
+      isCopied: rawData.isCopied ?? rawData.copied,
+      startDate: rawData.startDate || dayjs().format('YYYY-MM-DD'),
+      endDate: rawData.endDate || rawData.startDate || dayjs().format('YYYY-MM-DD'),
+      places: rawData.places || [],
+      likes: rawData.likes || 0,
+      dislikes: rawData.dislikes || 0,
+      shared: rawData.shared || 0,
+    };
+    setSchedule(sanitized);
+
+    const dailyPlanForMap = (sanitized.places || []).reduce((acc, place) => {
+      const date = place.date || sanitized.startDate;
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(place);
+      return acc;
+    }, {});
+    const initialTripDates = Object.keys(dailyPlanForMap).sort();
+    if (initialTripDates.length > 0) {
+      setSelectedDay(initialTripDates[0]);
+    }
+  };
+
+  const fetchFromServer = useCallback(async () => {
     try {
       setLoading(true);
       // 캐시 우회를 위해 쿼리스트링 추가
@@ -416,6 +459,7 @@ function ScheduleDetailFull() {
   const handleUpdateSchedule = async (dataToSave) => {
     try {
       // places와 dailyPlan 동기화
+
       let places = dataToSave.places;
       let dailyPlan = {};
       if (places && Array.isArray(places)) {
@@ -425,6 +469,7 @@ function ScheduleDetailFull() {
           dailyPlan[date].push(place);
         });
       }
+
       const scheduleToSave = {
         ...dataToSave,
         places,
@@ -435,7 +480,6 @@ function ScheduleDetailFull() {
       console.log('서버 응답:', resp);
       fetchSchedule(); // 서버에서 최신 데이터 받아오기
     } catch (error) {
-      console.error('Error updating schedule:', error);
       alert('스케줄 업데이트에 실패했습니다.');
     }
   };
@@ -461,23 +505,20 @@ function ScheduleDetailFull() {
   const handleLike = async () => {
     try {
       const res = await api.post(`/schedule/${id}/like`);
-      setSchedule(prev => ({ ...prev, likes: res.data.likes }));
-      alert("좋아요!");
+      setSchedule(prev => ({ ...prev, likes: res.data.likes, dislikes: res.data.dislikes }));
     } catch (err) {
-      alert("좋아요 처리에 실패했습니다.");
-      fetchSchedule(); // Revert optimistic update on error
+      fetchFromServer();
     }
   };
 
   const handleDislike = async () => {
     try {
-      // This will be enabled once backend is ready
       const res = await api.post(`/schedule/${id}/dislike`);
-      setSchedule(prev => ({ ...prev, dislikes: res.data.dislikes }));
+      setSchedule(prev => ({ ...prev, likes: res.data.likes, dislikes: res.data.dislikes }));
       alert("싫어요!");
     } catch (err) {
       alert("싫어요 처리에 실패했습니다.");
-      fetchSchedule(); // Revert optimistic update on error
+      fetchFromServer();
     }
   };
 
@@ -524,9 +565,7 @@ function ScheduleDetailFull() {
 
   const dailyPlanForMap = (schedule.places || []).reduce((acc, place) => {
     const date = place.date || schedule.startDate;
-    if (!acc[date]) {
-      acc[date] = [];
-    }
+    if (!acc[date]) acc[date] = [];
     acc[date].push(place);
     return acc;
   }, {});
@@ -609,14 +648,23 @@ function ScheduleDetailFull() {
               )}
             </DetailSection>
           )}
+          
+          {/* 리뷰 섹션 추가 */}
+          <ReviewSection 
+            reviews={reviews}
+            scheduleId={id}
+            onCreateReview={handleCreateReview}
+            onDeleteReview={handleDeleteReview}
+          />
+
         </RightSide>
       </Container>
 
-      {isModalOpen && (
+      {editModalOpen && (
         <ScheduleEditModal
           schedule={schedule}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleUpdateSchedule}
+          onClose={() => setEditModalOpen(false)}
+          onSave={fromMypage ? handleSaveEditedSchedule : handleUpdateSchedule}
         />
       )}
       {editModalOpen && fromMypage && (

@@ -12,6 +12,7 @@ import com.korea.trip.models.UserPrincipal;
 
 import javax.crypto.SecretKey;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
@@ -23,7 +24,7 @@ public class JwtTokenProvider {
     private final long jwtExpirationInMs;
 
     public JwtTokenProvider(@Value("${app.jwtSecret}") String jwtSecret, @Value("${app.jwtExpirationInMs}") long jwtExpirationInMs) {
-        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         this.jwtExpirationInMs = jwtExpirationInMs;
     }
 
@@ -37,7 +38,7 @@ public class JwtTokenProvider {
                 .setSubject(Long.toString(userPrincipal.getId()))
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .signWith(this.key, SignatureAlgorithm.HS512) 
+                .signWith(this.key) 
                 .compact();
     }
 

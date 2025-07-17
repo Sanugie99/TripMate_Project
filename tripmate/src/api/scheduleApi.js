@@ -48,3 +48,29 @@ export const saveSchedule = async (schedule) => {
   const response = await api.post("/schedule", payload);
   return response.data;
 };
+
+// 일정 업데이트
+export const updateSchedule = async (scheduleId, scheduleData) => {
+  const allPlaces = Object.values(scheduleData.dailyPlan || {}).flat();
+
+  const payload = {
+    departure: scheduleData.departure,
+    arrival: scheduleData.arrival,
+    date: scheduleData.startDate,
+    days: scheduleData.days || 1,
+    transportType: scheduleData.goTransport?.split("|")[0] || "korail",
+    startTime: dayjs(scheduleData.startDate).hour(9).minute(0).second(0).toISOString(),
+    endTime: dayjs(scheduleData.startDate).hour(18).minute(0).second(0).toISOString(),
+    places: allPlaces,
+    accommodation: scheduleData.accommodation,
+    food: scheduleData.food,
+    other: scheduleData.other,
+    bus: scheduleData.bus,
+    train: scheduleData.train,
+    totalBudget: scheduleData.totalBudget,
+    isShared: scheduleData.isShared,
+  };
+
+  const response = await api.put(`/schedule/${scheduleId}`, payload);
+  return response.data;
+};

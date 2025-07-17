@@ -97,7 +97,7 @@ public class ScheduleService {
 	}
 
 	public Schedule getScheduleById(Long id) {
-		return scheduleRepository.findById(id)
+		return scheduleRepository.findByIdWithPlaces(id)
 				.orElseThrow(() -> new RuntimeException("Schedule not found with id " + id));
 	}
 
@@ -270,6 +270,10 @@ public class ScheduleService {
         Schedule originalSchedule = scheduleRepository.findById(originalScheduleId)
             .orElseThrow(() -> new RuntimeException("원본 일정을 찾을 수 없습니다."));
         
+        // 원본 스케줄의 shared 카운트 1 증가
+        originalSchedule.setShared(originalSchedule.getShared() + 1);
+        scheduleRepository.save(originalSchedule);
+
         User newUser = userRepository.findById(newUserId)
             .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
@@ -302,7 +306,8 @@ public class ScheduleService {
         }
 
         Schedule savedSchedule = scheduleRepository.save(newSchedule);
-        return ScheduleDTO.fromEntity(savedSchedule);
+        // DTO를 반환하여 클라이언트가 새 정보를 가질 수 있도록 함
+        return ScheduleDTO.fromEntity(originalSchedule);
     }
 
     @Transactional

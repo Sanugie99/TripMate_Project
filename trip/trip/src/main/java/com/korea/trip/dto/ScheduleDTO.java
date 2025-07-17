@@ -25,6 +25,9 @@ public class ScheduleDTO {
     private String arrival;
     private String transportType;
     private boolean isPublic;
+    private int likes;
+    private int dislikes;
+    private int shared;
 
     private List<PlaceDTO> places;
     private List<ReviewDTO> reviews;
@@ -60,6 +63,9 @@ public class ScheduleDTO {
                 .arrival(schedule.getArrival())
                 .transportType(schedule.getTransportType())
                 .isPublic(schedule.isPublic())
+                .likes(schedule.getLikes())
+                .dislikes(schedule.getDislikes())
+                .shared(schedule.getShared())
                 .places(placeDTOs)
                 .reviews(reviewDTOs)
                 .userId(userId)

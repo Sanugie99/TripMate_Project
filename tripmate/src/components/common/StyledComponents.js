@@ -248,30 +248,55 @@ export const UserReviews = styled.div`
 export const CityGridBlock = styled.div`
       padding: 2rem;
       background: #f8f9fa;
+      display: block; /* Revert to block display */
     `;
 
 export const Grid = styled.div`
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(5, 1fr); /* Exactly 5 columns */
+      gap: 1rem; /* Adjusted gap */
+      max-width: 1200px; /* Max width for centering */
+      margin: 0 auto; /* Center the grid */
+      padding: 1rem; /* Add some padding inside the grid */
     `;
 
 export const CityItem = styled.div`
-      background: linear-gradient(135deg, #6e8efb, #a777e3);
+      aspect-ratio: 1 / 1; /* Makes the item square */
+      background-image: ${props => `url(${props.$imageUrl})`}; /* Use image from props */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
       color: white;
       border-radius: 12px;
-      padding: 2rem 1rem;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: bold;
       cursor: pointer;
       transition: transform 0.2s ease-in-out, box-shadow 0.2s;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-   
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      position: relative; /* Needed for pseudo-element positioning */
+      z-index: 1; /* Ensure text is above overlay */
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4); /* Dark semi-transparent overlay */
+        border-radius: 12px;
+        z-index: -1; /* Place behind content */
+      }
+
       &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-7px) scale(1.02);
+      }
+      &:hover::before{
+        background: transparent;
       }
     `;

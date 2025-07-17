@@ -32,8 +32,10 @@ public class User {
 	@Column(nullable = false)
 	private String password;
 
-	@Column(unique = true)
+	@Column
 	private String email;
+
+	private boolean temporaryPassword;
 
 	
 	// 연관관계

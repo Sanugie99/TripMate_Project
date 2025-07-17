@@ -2,6 +2,8 @@
 
 ## ✈️ 소개
 사용자 맞춤 여행 일정 자동 생성 & 지도 기반 여행 계획 플랫폼
+(2025.06.30 ~ 2025.07.15)
+
 
 ## 🛠 기술 스택
 - Front: React (tripmate/)
@@ -14,6 +16,7 @@
 
 ## 🔧 브랜치 전략
 - `main`: 배포용
+<<<<<<< HEAD
 - `dev`: 개발 통합
 - `feature/*`: 기능별 브랜치 (ex. feature/login)
 
@@ -66,3 +69,6 @@ git push origin feature/login       #만든 브랜치를 GitHub로 올리기
 ![image](https://github.com/user-attachments/assets/fe9e48c5-b972-47b1-b761-d194803906f6)  
 이걸 dev로 바꿔서 push 하는겁니다! master은 아닙니다.
 
+=======
+- `dev`: 개발 통합
+>>>>>>> 46dea7e5c04c9ace02b5df1a610525d2bc4fc406

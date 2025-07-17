@@ -1,17 +1,17 @@
 server:
-  port: 10000
+  port: ${PORT:5000}
 korail:
-  service-key: VbGT1gAGtB0pWwVeEzwW/a3QsjZx5CnJrEwi4qXcekuJRem4Eai2V/NbbjlbVUh3DlxMu0Pg94aJrjOFqFryAQ==
+  service-key: ${KORAIL_SERVICE_KEY}
 bus:
-  service-key: VbGT1gAGtB0pWwVeEzwW/a3QsjZx5CnJrEwi4qXcekuJRem4Eai2V/NbbjlbVUh3DlxMu0Pg94aJrjOFqFryAQ==
+  service-key: ${BUS_SERVICE_KEY}
 kakao:
-  api-key: 8f8539e18dbd6168eaf2123a48a02fa0
+  api-key: ${KAKAO_API_KEY}
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/tripmate?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 1234
+    url: ${DB_URL}
+    driver-class-name: com.mysql.cj.jdbc.Driver 
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -24,7 +24,9 @@ spring:
   web:
     resources:
        add-mappings: true
+  mail:
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
 app:
-  jwtSecret: "z1X9F4pLq2NhB8vY7Wq3ReXs9Kw6MfDr7LpCvWxZSaGhJiUkLmNOpQrStUvWxYz1"
+  jwtSecret: ${JWT_SECRET}
   jwtExpirationInMs: 86400000
-

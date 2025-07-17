@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/schedule")
-@CrossOrigin(origins = "http://localhost:3000")
+
 public class ScheduleController {
 
 	private final ScheduleService scheduleService;

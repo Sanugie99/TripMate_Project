@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/photos")
-@CrossOrigin(origins = "http://localhost:3000") // CORS 설정
+
 public class PhotoController {
 
     private final PhotoService photoService;

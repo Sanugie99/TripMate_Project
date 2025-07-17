@@ -1,17 +1,16 @@
 import { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
-import { useLocation, useNavigate } from "react-router-dom"; // Added useNavigate
+import { useLocation, useNavigate, useParams } from "react-router-dom"; // Added useParams
 import MapComponent from "../components/map/ScheduleMapComponent";
 import PlaceSearchBar from "../components/schedule/PlaceSearchBar";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-// import { motion } from "framer-motion";
 import { FaArrowDown } from "react-icons/fa";
 import dayjs from "dayjs";
 import SimpleModal from "../components/Modal/SimpleModal";
 import SearchPage from "./SearchPage";
 import SchedulePage from "./SchedulePage";
-import axios from 'axios';
-import { saveSchedule } from "../api/scheduleApi";
+import { saveSchedule, updateSchedule } from "../api/scheduleApi"; // Import updateSchedule
+import { fetchScheduleById } from "../api/UserApi"; // Import fetchScheduleById
 import { v4 as uuidv4 } from 'uuid'; // uuid 추가
 
 const CreateScheduleButton = styled.button`
@@ -151,6 +150,7 @@ const BudgetInput = styled.input`
 const MySchedulePage = () => {
     const location = useLocation();
     const navigate = useNavigate(); // Added useNavigate
+    const { scheduleId } = useParams(); // Destructure scheduleId
     const [schedule, setSchedule] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedPlace, setSelectedPlace] = useState(null);
@@ -282,58 +282,142 @@ const MySchedulePage = () => {
     };
 
     useEffect(() => {
-        let newHasCreatedSchedule = false;
-        if (location.state) {
-            setTransportInfo(location.state);
-            if (location.state.goTransport || location.state.returnTransport || location.state.days > 0) {
-                newHasCreatedSchedule = true;
-            }
+        const loadSchedule = async () => {
+            console.log("MySchedulePage: useEffect triggered.");
+            console.log("MySchedulePage: Current scheduleId from useParams:", scheduleId);
 
-            const newScheduleData = {
-                departure: location.state.departure || "",
-                arrival: location.state.arrival || "",
-                startDate: location.state.date || "",
-                days: location.state.days || 1,
-                goTransport: location.state.goTransport || "",
-                returnTransport: location.state.returnTransport || "",
-                dailyPlan: {},
-                isShared: false,
-            };
+            // 상태 초기화
+            setSchedule(null);
+            setTransportInfo(null);
+            setSelectedDate(null);
+            setAccommodation(0);
+            setFood(0);
+            setOther(0);
+            setTotalBudget(0);
+            setHasCreatedSchedule(false);
 
-            const start = dayjs(location.state.date);
-            for (let i = 0; i < location.state.days; i++) {
-                const dateKey = start.add(i, "day").format("YYYY-MM-DD");
-                newScheduleData.dailyPlan[dateKey] = [];
-            }
+            if (scheduleId) {
+                console.log(`MySchedulePage: Attempting to fetch schedule with ID: ${scheduleId}`);
+                try {
+                    const fetchedSchedule = await fetchScheduleById(scheduleId);
+                    console.log("MySchedulePage: Fetched schedule by ID successfully:", fetchedSchedule);
 
-            // dailyPlan 내 모든 장소를 합쳐 places 배열 생성 (초기에는 빈 배열이지만 추후 추가하면 여기서도 갱신 필요)
-            newScheduleData.places = Object.values(newScheduleData.dailyPlan).flat();
+                    // 백엔드에서 받은 places 리스트를 dailyPlan 객체로 변환
+                    const dailyPlan = {};
+                    const start = dayjs(fetchedSchedule.startDate);
+                    const end = dayjs(fetchedSchedule.endDate);
+                    const days = end.diff(start, 'day') + 1;
 
-            setSchedule(newScheduleData);
-            localStorage.setItem("mySchedule", JSON.stringify(newScheduleData));
-            setSelectedDate(Object.keys(newScheduleData.dailyPlan)[0]);
-        } else {
-            const saved = localStorage.getItem("mySchedule");
-            if (saved) {
-                const parsed = JSON.parse(saved);
+                    // 먼저 모든 날짜에 대해 ��� 배열로 초기화
+                    for (let i = 0; i < days; i++) {
+                        const dateKey = start.add(i, "day").format("YYYY-MM-DD");
+                        dailyPlan[dateKey] = [];
+                    }
 
-                // 만약 places 필드가 없으면 dailyPlan로부터 생성
-                if (!parsed.places) {
-                    parsed.places = Object.values(parsed.dailyPlan).flat();
+                    // fetchedSchedule.places를 순회하며 dailyPlan에 추가
+                    if (fetchedSchedule.places && fetchedSchedule.places.length > 0) {
+                        fetchedSchedule.places.forEach(place => {
+                            const dateKey = place.date; // PlaceDTO에 date 필드가 있다고 가정
+                            if (dailyPlan[dateKey]) {
+                                dailyPlan[dateKey].push({ ...place, id: place.id || uuidv4() });
+                            }
+                        });
+                    }
+                    
+                    fetchedSchedule.dailyPlan = dailyPlan;
+
+                    setSchedule(fetchedSchedule);
+                    localStorage.setItem("mySchedule", JSON.stringify(fetchedSchedule));
+                    
+                    setTransportInfo({
+                        departure: fetchedSchedule.departure,
+                        arrival: fetchedSchedule.arrival,
+                        date: fetchedSchedule.startDate,
+                        days: days,
+                        goTransport: fetchedSchedule.goTransport,
+                        returnTransport: fetchedSchedule.returnTransport,
+                    });
+
+                    setAccommodation(fetchedSchedule.accommodation || 0);
+                    setFood(fetchedSchedule.food || 0);
+                    setOther(fetchedSchedule.other || 0);
+                    setHasCreatedSchedule(true);
+                    
+                    const dates = Object.keys(fetchedSchedule.dailyPlan);
+                    if (dates.length > 0) setSelectedDate(dates[0]);
+                    
+                    console.log("MySchedulePage: State updated with fetched and processed schedule.");
+
+                } catch (error) {
+                    console.error("MySchedulePage: Failed to fetch schedule by ID:", error);
+                    alert("일정을 불러오는 데 실패했습니다.");
+                    navigate("/mypage"); // 에러 발생 시 마이페이지로 이동
+                }
+            } else if (location.state) {
+                // Case 2: location.state is present (new schedule from StartPlannerPage)
+                console.log("MySchedulePage: Processing new schedule from location.state:", location.state);
+                setTransportInfo(location.state);
+                if (location.state.goTransport || location.state.returnTransport || location.state.days > 0) {
+                    setHasCreatedSchedule(true);
                 }
 
-                setSchedule(parsed);
+                const newScheduleData = {
+                    departure: location.state.departure || "",
+                    arrival: location.state.arrival || "",
+                    startDate: location.state.date || "",
+                    days: location.state.days || 1,
+                    goTransport: location.state.goTransport || "",
+                    returnTransport: location.state.returnTransport || "",
+                    dailyPlan: {},
+                    isShared: false,
+                };
 
-                const dates = Object.keys(parsed.dailyPlan);
-                if (dates.length > 0) setSelectedDate(dates[0]);
+                const start = dayjs(location.state.date);
+                for (let i = 0; i < location.state.days; i++) {
+                    const dateKey = start.add(i, "day").format("YYYY-MM-DD");
+                    newScheduleData.dailyPlan[dateKey] = [];
+                }
 
-                if (parsed.goTransport || parsed.returnTransport || (parsed.dailyPlan && Object.keys(parsed.dailyPlan).length > 0)) {
-                    newHasCreatedSchedule = true;
+                newScheduleData.places = Object.values(newScheduleData.dailyPlan).flat();
+
+                setSchedule(newScheduleData);
+                localStorage.setItem("mySchedule", JSON.stringify(newScheduleData));
+                setSelectedDate(Object.keys(newScheduleData.dailyPlan)[0]);
+                console.log("MySchedulePage: State updated with new schedule data.");
+
+            } else {
+                // Case 3: No scheduleId and no location.state (direct access to /my-schedule)
+                console.log("MySchedulePage: No scheduleId or location.state. Checking local storage.");
+                const saved = localStorage.getItem("mySchedule");
+                if (saved) {
+                    let parsed = JSON.parse(saved);
+                    console.log("MySchedulePage: Found data in local storage:", parsed);
+                    if (parsed.dailyPlan) {
+                        Object.keys(parsed.dailyPlan).forEach(date => {
+                            parsed.dailyPlan[date] = parsed.dailyPlan[date].map(p => ({
+                                ...p,
+                                id: p.id || uuidv4(),
+                            }));
+                        });
+                    }
+                    if (!parsed.places) {
+                        parsed.places = Object.values(parsed.dailyPlan).flat();
+                    }
+
+                    setSchedule(parsed);
+                    const dates = Object.keys(parsed.dailyPlan);
+                    if (dates.length > 0) setSelectedDate(dates[0]);
+                    if (parsed.goTransport || parsed.returnTransport || (parsed.dailyPlan && Object.keys(parsed.dailyPlan).length > 0)) {
+                        setHasCreatedSchedule(true);
+                    }
+                    console.log("MySchedulePage: State updated with local storage data.");
+                } else {
+                    console.log("MySchedulePage: No data in local storage. Starting fresh.");
                 }
             }
-        }
-        setHasCreatedSchedule(newHasCreatedSchedule);
-    }, [location.state]);
+        };
+        loadSchedule();
+    }, [scheduleId, location.state, navigate]);
 
     // 모든 place에 고유 id가 없으면 uuid를 자동 부여
     useEffect(() => {
@@ -342,12 +426,17 @@ const MySchedulePage = () => {
         const newDailyPlan = {};
         Object.entries(schedule.dailyPlan).forEach(([date, places]) => {
             newDailyPlan[date] = places.map(p => {
+                if (!p) { // If p is null or undefined, return a default valid object or filter it out
+                    changed = true;
+                    console.warn(`Found null/undefined place in dailyPlan for date ${date}. Filtering it out.`);
+                    return null; // Filter out invalid entries
+                }
                 if (!p.id) {
                     changed = true;
                     return { ...p, id: uuidv4() };
                 }
                 return p;
-            });
+            }).filter(Boolean); // Filter out any null entries
         });
         if (changed) {
             const updated = { ...schedule, dailyPlan: newDailyPlan };
@@ -361,7 +450,7 @@ const MySchedulePage = () => {
 
         // 기본 구조 예시 (place에 name, category, lat, lng 필드가 있어야 함)
         const newPlace = {
-            id: place.id || new Date().getTime(), // 임시 id
+            id: place.id || uuidv4(), // uuid 부여
             name: place.name || "이름없음",
             category: place.category || "기타",
             lat: place.lat,
@@ -467,11 +556,18 @@ const MySchedulePage = () => {
 
         try {
             console.log("저장될 최종 스케줄 데이터:", fullSchedule);
-            const saved = await saveSchedule(fullSchedule);
+            let saved;
+            if (schedule.id) { // If schedule has an ID, it's an existing schedule
+                saved = await updateSchedule(schedule.id, fullSchedule);
+                alert("일정이 성공적으로 업데이트되었습니다.");
+            } else { // Otherwise, it's a new schedule
+                saved = await saveSchedule(fullSchedule);
+                alert("일정이 성공적으로 저장되었습니다.");
+            }
             navigate(`/schedule/${saved.id}`);
         } catch (e) {
-            console.error("일정 저장 실패:", e);
-            alert("일정 저장에 실패했습니다.");
+            console.error("일정 저장/업데이트 실패:", e);
+            alert("일정 저장/업데이트에 실패했습니다.");
         }
     };
 
@@ -624,8 +720,16 @@ const MySchedulePage = () => {
                                             style={{ minHeight: 40, position: 'relative' }}
                                         >
                                             {(schedule.dailyPlan[selectedDate] || []).map((p, idx) => {
-                                                if (!p.id) throw new Error('모든 place에는 고유 id가 필요합니다!');
-                                                const dragId = String(p.id);
+                                                // Ensure p is a valid object and has an id
+                                                if (!p) {
+                                                    console.warn(`Skipping null/undefined place object at index ${idx} for date ${selectedDate}.`);
+                                                    return null; // Skip rendering this item
+                                                }
+                                                // Ensure dragId is always a unique string
+                                                const dragId = p.id ? String(p.id) : uuidv4();
+                                                if (!p.id) {
+                                                    console.warn(`Place object at index ${idx} for date ${selectedDate} had no ID. Assigning temporary UUID for rendering: ${dragId}`, p);
+                                                }
                                                 return (
                                                     <Draggable key={dragId} draggableId={dragId} index={idx}>
                                                         {(provided) => (

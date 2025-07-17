@@ -103,11 +103,49 @@ const PhotoItem = styled.div`
   }
 `;
 
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  gap: 0.5rem;
+`;
+
+const PageButton = styled.button`
+  padding: 0.5rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: ${(props) => (props.$active ? '#007bff' : '#fff')};
+  color: ${(props) => (props.$active ? 'white' : '#007bff')};
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${(props) => (props.$active ? '#0056b3' : '#e9ecef')};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+`;
+
 function SharedTripsPage() {
     const [schedules, setSchedules] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const navigate = useNavigate(); // useNavigate 훅 사용
+    const navigate = useNavigate();
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+
+    // Get current schedules for pagination
+    const indexOfLastSchedule = currentPage * itemsPerPage;
+    const indexOfFirstSchedule = indexOfLastSchedule - itemsPerPage;
+    const currentSchedules = schedules.slice(indexOfFirstSchedule, indexOfLastSchedule);
+
+    // Change page
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    const totalPages = Math.ceil(schedules.length / itemsPerPage);
 
     useEffect(() => {
         const fetchSharedSchedules = async () => {
@@ -139,38 +177,63 @@ function SharedTripsPage() {
             {schedules.length === 0 ? (
                 <p>아직 공유된 여행 계획이 없습니다.</p>
             ) : (
-                <ScheduleGrid>
-                    {schedules.map((schedule) => (
-                        <ScheduleCard key={schedule.id} onClick={() => navigate(`/schedule/${schedule.id}`)}>
-                            <ScheduleTitle>{schedule.title || '제목 없음'}</ScheduleTitle>
-                            <ScheduleMeta>기간: {schedule.startDate ? dayjs(schedule.startDate).format('YYYY.MM.DD') : '날짜 정보 없음'} ~ {schedule.endDate ? dayjs(schedule.endDate).format('YYYY.MM.DD') : '날짜 정보 없음'}</ScheduleMeta>
-                            <ScheduleDescription>{schedule.description || '설명 없음'}</ScheduleDescription>
-                            {schedule.places && schedule.places.length > 0 && (
-                                <SchedulePlaces>
-                                    <h4>주요 장소:</h4>
-                                    <ul>
-                                        {schedule.places.slice(0, 3).map((place, index) => (
-                                            <li key={index}>{place.name}</li>
+                <>
+                    <ScheduleGrid>
+                        {currentSchedules.map((schedule) => (
+                            <ScheduleCard key={schedule.id} onClick={() => navigate(`/schedule/${schedule.id}?fromSharedTrips=true`)}>
+                                <ScheduleTitle>{schedule.title || '제목 없음'}</ScheduleTitle>
+                                <ScheduleMeta>기간: {schedule.startDate ? dayjs(schedule.startDate).format('YYYY.MM.DD') : '날짜 정보 없음'} ~ {schedule.endDate ? dayjs(schedule.endDate).format('YYYY.MM.DD') : '날짜 정보 없음'}</ScheduleMeta>
+                                <ScheduleDescription>{schedule.description || '설명 없음'}</ScheduleDescription>
+                                {schedule.places && schedule.places.length > 0 && (
+                                    <SchedulePlaces>
+                                        <h4>주요 장소:</h4>
+                                        <ul>
+                                            {schedule.places.slice(0, 3).map((place, index) => (
+                                                <li key={index}>{place.name}</li>
+                                            ))}
+                                            {schedule.places.length > 3 && <li>...</li>}
+                                        </ul>
+                                    </SchedulePlaces>
+                                )}
+                                {schedule.photos && schedule.photos.length > 0 && (
+                                    <PhotoGrid>
+                                        {schedule.photos.map((photo) => (
+                                            <PhotoItem key={photo.id}>
+                                                <img src={`http://localhost:10000${photo.imageUrl}`} alt="Schedule Photo" onError={e => e.target.src = '/icons/tourist.png'} />
+                                            </PhotoItem>
                                         ))}
-                                        {schedule.places.length > 3 && <li>...</li>}
-                                    </ul>
-                                </SchedulePlaces>
-                            )}
-                            {schedule.photos && schedule.photos.length > 0 && (
-                                <PhotoGrid>
-                                    {schedule.photos.map((photo) => (
-                                        <PhotoItem key={photo.id}>
-                                            <img src={`http://localhost:10000${photo.imageUrl}`} alt="Schedule Photo" onError={e => e.target.src = '/icons/tourist.png'} />
-                                        </PhotoItem>
-                                    ))}
-                                </PhotoGrid>
-                            )}
-                            <ScheduleUser>
-                                공유자: {(schedule.user && schedule.user.username) ? schedule.user.username : (schedule.username || '알 수 없음')}
-                            </ScheduleUser>
-                        </ScheduleCard>
-                    ))}
-                </ScheduleGrid>
+                                    </PhotoGrid>
+                                )}
+                                <ScheduleUser>
+                                    공유자: {(schedule.user && schedule.user.username) ? schedule.user.username : (schedule.username || '알 수 없음')}
+                                </ScheduleUser>
+                            </ScheduleCard>
+                        ))}
+                    </ScheduleGrid>
+                    <PaginationContainer>
+                        <PageButton onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1}>이전</PageButton>
+                        {(() => {
+                            const pageNumbers = [];
+                            const maxPagesToShow = 5;
+                            let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+                            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+                            if (endPage - startPage + 1 < maxPagesToShow) {
+                                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+                            }
+
+                            for (let i = startPage; i <= endPage; i++) {
+                                pageNumbers.push(
+                                    <PageButton key={i} onClick={() => paginate(i)} $active={i === currentPage}>
+                                        {i}
+                                    </PageButton>
+                                );
+                            }
+                            return pageNumbers;
+                        })()}
+                        <PageButton onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages}>다음</PageButton>
+                    </PaginationContainer>
+                </>
             )}
         </SharedTripsContainer>
     );

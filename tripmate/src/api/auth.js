@@ -2,23 +2,19 @@ import api from "./index";
 
 export const login = async (credentials) => {
   const response = await api.post("/auth/login", credentials);
-  const { accessToken } = response.data;
-  localStorage.setItem("token", accessToken);
+  
+  // 백엔드에서 보내주는 'token'과 'user'를 직접 사용하도록 수정
+  const { token, user } = response.data;
 
-  let meResponseData = null;
-  try {
-    const meResponse = await api.get("/auth/me");
-    meResponseData = meResponse.data;
-    localStorage.setItem("user", JSON.stringify(meResponseData));
-    console.log("Fetched user data:", meResponseData); // 디버깅용
-  } catch (meError) {
-    console.error("Failed to fetch user data after login:", meError); // 디버깅용
-    localStorage.removeItem("token"); // 실패 시 토큰 제거
-    localStorage.removeItem("user");
-    throw meError; // 에러 전파
+  if (token) {
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+  } else {
+    // 토큰이 없는 경우 에러 처리
+    throw new Error("Login failed: No token received");
   }
 
-  return { ...response.data, user: meResponseData };
+  return response.data;
 };
 
 export const signup = async (userData) => {
@@ -31,5 +27,7 @@ export const logout = () => {
 };
 
 export const getMe = async () => {
+  // 이 함수는 이제 직접 사용되지 않을 수 있지만, 유효성 검사 용도로 남겨둘 수 있습니다.
+  // AuthController에 /me 엔드포인트를 추가해야 정상 동작합니다.
   return await api.get("/auth/me");
 };

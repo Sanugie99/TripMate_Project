@@ -167,6 +167,31 @@ const PlaceItem = styled.li`
   transition: border 0.2s, background 0.2s;
 `;
 
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  gap: 0.5rem;
+`;
+
+const PageButton = styled.button`
+  padding: 0.5rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: ${(props) => (props.$active ? '#4caf50' : '#fff')};
+  color: ${(props) => (props.$active ? 'white' : '#4caf50')};
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${(props) => (props.$active ? '#3a9a38' : '#e9ecef')};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+`;
+
 const SearchPage = ({ defaultDeparture = "서울", defaultArrival = "부산", onAddPlace, selectedDate }) => {
   const [departure, setDeparture] = useState(defaultDeparture);
   const [arrival, setArrival] = useState(defaultArrival);
@@ -178,6 +203,9 @@ const SearchPage = ({ defaultDeparture = "서울", defaultArrival = "부산", on
   const [selectedPlaces, setSelectedPlaces] = useState([]); // 선택된 장소 id 리스트
   const [lastRecommendParams, setLastRecommendParams] = useState(null); // 마지막 추천 요청 파라미터
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   // 출발지/도착지는 props로 고정
   // const departure = defaultDeparture;
   // const arrival = defaultArrival;
@@ -188,6 +216,7 @@ const SearchPage = ({ defaultDeparture = "서울", defaultArrival = "부산", on
     setError("");
     setSelectedPlaceId(null);
     setFilteredPlaces([]);
+    setCurrentPage(1); // Reset page on new search
     try {
       const recommendRes = await fetchRecommendedPlaces(params.arrival);
       let places = [];
@@ -230,11 +259,13 @@ const SearchPage = ({ defaultDeparture = "서울", defaultArrival = "부산", on
     setFilteredPlaces([]);
     setLastRecommendParams(null);
     setSelectedPlaces([]);
+    setCurrentPage(1); // Reset page on input change
   };
 
   // 카테고리 변경 시 선택된 장소가 초기화되지 않도록 handleCategoryChange 함수로 분리
   const handleCategoryChange = (cat) => {
     setSelectedCategory(cat);
+    setCurrentPage(1); // Reset page on category change
     // setSelectedPlaces([]); // 이 줄은 제거하여 선택 유지
   };
 
@@ -258,39 +289,45 @@ const SearchPage = ({ defaultDeparture = "서울", defaultArrival = "부산", on
     setSelectedPlaces([]); // 선택 초기화
   };
 
-  // 카테고리별 필터링 함수
+  // 카테고리별 필터링 함수 (페이지네이션 미적용)
   const getFilteredByCategory = () => {
-    if (selectedCategory === "전체") return filteredPlaces;
+    let places = filteredPlaces;
     if (selectedCategory === "관광") {
-      return filteredPlaces.filter(
+      places = filteredPlaces.filter(
         (p) =>
           (p.category && p.category.includes("관광")) ||
           p.categoryCode === "AT4"
       );
-    }
-    if (selectedCategory === "음식점") {
-      return filteredPlaces.filter(
+    } else if (selectedCategory === "음식점") {
+      places = filteredPlaces.filter(
         (p) =>
           (p.category && p.category.includes("음식점")) ||
           p.categoryCode === "FD6"
       );
-    }
-    if (selectedCategory === "카페") {
-      return filteredPlaces.filter(
+    } else if (selectedCategory === "카페") {
+      places = filteredPlaces.filter(
         (p) =>
           (p.category && p.category.includes("카페")) ||
           p.categoryCode === "CE7"
       );
-    }
-    if (selectedCategory === "숙박") {
-      return filteredPlaces.filter(
+    } else if (selectedCategory === "숙박") {
+      places = filteredPlaces.filter(
         (p) =>
           (p.category && p.category.includes("숙박")) ||
           p.categoryCode === "AD5"
       );
     }
-    return filteredPlaces;
+    return places;
   };
+
+  const filteredAndCategorizedPlaces = getFilteredByCategory();
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentPlaces = filteredAndCategorizedPlaces.slice(indexOfFirstItem, indexOfLastItem);
+
+  const totalPages = Math.ceil(filteredAndCategorizedPlaces.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <Container>
@@ -341,32 +378,57 @@ const SearchPage = ({ defaultDeparture = "서울", defaultArrival = "부산", on
         </CategoryButtonRow>
         {loading && <Message>⏳ 추천 장소를 불러오는 중입니다...</Message>}
         {error && <Message isError>{error}</Message>}
-        {!loading && !error && getFilteredByCategory().length > 0 && (
-          <ul style={{ listStyle: "none", padding: 0 }}>
-            {getFilteredByCategory().map((place) => {
-              const key = place.name + place.address;
-              const selected = selectedPlaces.includes(key);
-              return (
-                <PlaceItem
-                  key={key}
-                  selected={selected}
-                  onClick={() => handlePlaceCheck(key, !selected)}
-                >
-                  {(!place.photoUrl || place.photoUrl.trim() === "") ? (
-                    <img src="/icons/tourist.png" alt={place.name} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, marginRight: 16 }} />
-                  ) : (
-                    <img src={place.photoUrl} alt={place.name} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, marginRight: 16 }} onError={e => e.target.src = '/icons/tourist.png'} />
-                  )}
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{place.name}</div>
-                    <div style={{ color: "#666", fontSize: 14 }}>{place.address}</div>
-                  </div>
-                </PlaceItem>
-              );
-            })}
-          </ul>
+        {!loading && !error && filteredAndCategorizedPlaces.length > 0 && (
+          <>
+            <ul style={{ listStyle: "none", padding: 0 }}>
+              {currentPlaces.map((place) => {
+                const key = place.name + place.address;
+                const selected = selectedPlaces.includes(key);
+                return (
+                  <PlaceItem
+                    key={key}
+                    selected={selected}
+                    onClick={() => handlePlaceCheck(key, !selected)}
+                  >
+                    {(!place.photoUrl || place.photoUrl.trim() === "") ? (
+                      <img src="/icons/tourist.png" alt={place.name} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, marginRight: 16 }} />
+                    ) : (
+                      <img src={place.photoUrl} alt={place.name} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, marginRight: 16 }} onError={e => e.target.src = '/icons/tourist.png'} />
+                    )}
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{place.name}</div>
+                      <div style={{ color: "#666", fontSize: 14 }}>{place.address}</div>
+                    </div>
+                  </PlaceItem>
+                );
+              })}
+            </ul>
+            <PaginationContainer>
+              <PageButton onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1}>이전</PageButton>
+              {(() => {
+                  const pageNumbers = [];
+                  const maxPagesToShow = 5;
+                  let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+                  let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+                  if (endPage - startPage + 1 < maxPagesToShow) {
+                      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+                  }
+
+                  for (let i = startPage; i <= endPage; i++) {
+                      pageNumbers.push(
+                          <PageButton key={i} onClick={() => paginate(i)} $active={i === currentPage}>
+                              {i}
+                          </PageButton>
+                      );
+                  }
+                  return pageNumbers;
+              })()}
+              <PageButton onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages}>다음</PageButton>
+            </PaginationContainer>
+          </>
         )}
-        {!loading && !error && getFilteredByCategory().length === 0 && (
+        {!loading && !error && filteredAndCategorizedPlaces.length === 0 && (
           <Message>추천 장소가 없습니다.</Message>
         )}
       </ResultBox>

@@ -1,7 +1,10 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: process.env.REACT_APP_API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 // 요청 인터셉터: 로컬 스토리지에서 토큰을 가져와 모든 요청 헤더에 추가

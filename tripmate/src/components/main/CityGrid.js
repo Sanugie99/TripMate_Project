@@ -46,8 +46,29 @@ const CreateScheduleButton = styled.button`
 
 const cities = [
     '서울', '부산', '경주', '강릉', '여수', '전주',
-    '대전', '인천', '춘천', '가평', '수원'
+    '대전', '인천', '춘천', '가평', '수원', '포항',
+    '군산', '목포', '안동', '제천' , '영월'
 ];
+
+const cityImages = {
+    '서울': '/images/cities/seoul.jpg',
+    '부산': '/images/cities/busan.jpg',
+    '경주': '/images/cities/gyeongju.jpg',
+    '강릉': '/images/cities/gangneung.jpg',
+    '여수': '/images/cities/yeosu.jpg',
+    '전주': '/images/cities/jeonju.jpg',
+    '대전': '/images/cities/daejeon.jpg',
+    '인천': '/images/cities/incheon.jpg',
+    '춘천': '/images/cities/chuncheon.jpg',
+    '가평': '/images/cities/gapyeong.jpg',
+    '수원': '/images/cities/suwon.jpg',
+    '포항': '/images/cities/pohang.jpg',
+    '군산': '/images/cities/gunsan.jpg',
+    '목포': '/images/cities/mokpo.jpg',
+    '안동': '/images/cities/andong.jpg',
+    '제천': '/images/cities/jecheon.jpg',
+    '영월': '/images/cities/yeongwol.jpg',
+};
 
 
 function CityGrid() {
@@ -79,7 +100,7 @@ function CityGrid() {
             <CityGridBlock>
                 <Grid>
                     {cities.map((city) => (
-                        <CityItem key={city} onClick={() => handleCityClick(city)}>
+                        <CityItem key={city} onClick={() => handleCityClick(city)} $imageUrl={cityImages[city]}>
                             {city}
                         </CityItem>
                     ))}

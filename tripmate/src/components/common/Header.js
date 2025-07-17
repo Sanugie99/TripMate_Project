@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { useAuth } from '../../context/AuthContext';
 
@@ -38,6 +38,15 @@ const NavLinks = styled.nav`
 function Header() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation(); // Get current location
+    const { id: scheduleId } = useParams(); // Get scheduleId from URL params
+
+    // Determine the path for "내 일정"
+    // If we are currently on a /myschedule/:id path, use that ID.
+    // Otherwise, default to /my-schedule (which will load from local storage or be new)
+    const mySchedulePath = location.pathname.startsWith('/myschedule/') && scheduleId
+        ? `/myschedule/${scheduleId}`
+        : '/my-schedule';
 
     const handleLogout = () => {
         logout();
@@ -52,11 +61,18 @@ function Header() {
                 <Link to="/travel">공유 여행지</Link>
                 {user ? (
                     <>
+<<<<<<< HEAD
                      <Link to="/" onClick={handleLogout}>로그아웃</Link>
                     <Link to={`/user/${user.userId}`}>마이페이지</Link>
                     <Link to={'/'}>일정 생성</Link>
+=======
+                        <Link to={'/'}>일정 생성</Link>
+                        <Link to={mySchedulePath}>내 일정</Link>
+                        <Link to={`/user/${user.userId}`}>마이페이지</Link>
+                        <Link to="/" onClick={handleLogout}>로그아웃</Link>
+>>>>>>> 46dea7e5c04c9ace02b5df1a610525d2bc4fc406
                     </>
-                   
+
                 ) : (
                     <Link to="/login">로그인</Link>
                 )}
