@@ -221,3 +221,34 @@ export const deleteReview = async (reviewId) => {
         throw error;
     }
 };
+
+// --- User Account API ---
+
+/**
+ * 회원 정보를 수정합니다.
+ * @param {object} userData - 수정할 사용자 정보. 예: { username: '새이름', email: 'new@email.com', password: 'newpassword123' }
+ * @returns {Promise<any>}
+ */
+export const updateUserProfile = async (userData) => {
+    try {
+        const response = await api.put('/users/me', userData);
+        return response.data;
+    } catch (error) {
+        console.error("🚨 updateUserProfile 에러:", error);
+        throw error;
+    }
+};
+
+/**
+ * 현재 로그인된 사용자의 계정을 삭제합니다.
+ * @returns {Promise<any>}
+ */
+export const deleteUserAccount = async () => {
+    try {
+        const response = await api.delete('/users/me');
+        return response.data;
+    } catch (error) {
+        console.error("🚨 deleteUserAccount 에러:", error);
+        throw error;
+    }
+};

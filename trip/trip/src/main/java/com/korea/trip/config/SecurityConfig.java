@@ -1,5 +1,6 @@
 package com.korea.trip.config;
 
+import com.korea.trip.service.CustomUserDetailsService;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.korea.trip.service.CustomUserDetailsService;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -56,9 +57,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/users/find-password").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/schedule/places/recommend").permitAll()
-                .requestMatchers("/api/auth/me").authenticated()
                 .requestMatchers("/api/users/**").authenticated()
                 .requestMatchers("/api/schedule/**").authenticated()
                 .anyRequest().permitAll()
@@ -68,16 +68,29 @@ public class SecurityConfig {
 
         return http.build();
     }
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://localhost:3000");
-        config.addAllowedOrigin("http://Webfront-env-1.eba-zgdxitmm.ap-northeast-2.elasticbeanstalk.com");
-        config.addAllowedOrigin("https://Webfront-env-1.eba-zgdxitmm.ap-northeast-2.elasticbeanstalk.com");
-        config.addAllowedMethod("*");
-        config.addAllowedHeader("*");
+        
+        // 허용할 Origin 목록 (하나씩만 설정)
+        config.setAllowedOrigins(List.of(
+            "http://localhost:3000",
+            "https://tripmateweb.store",
+            "https://www.tripmateweb.store"
+        ));
+        
+        // 허용할 HTTP 메서드
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        
+        // 허용할 헤더
+        config.setAllowedHeaders(List.of("*"));
+        
+        // Credentials 허용
         config.setAllowCredentials(true);
+        
+        // CORS 캐시 유지 시간 (1시간)
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

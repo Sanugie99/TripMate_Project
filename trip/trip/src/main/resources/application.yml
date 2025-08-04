@@ -1,21 +1,10 @@
-server:
-  port: ${PORT:5000}
-korail:
-  service-key: ${KORAIL_SERVICE_KEY}
-bus:
-  service-key: ${BUS_SERVICE_KEY}
-kakao:
-  api-key: ${KAKAO_API_KEY}
 spring:
-  datasource:
-    url: ${DB_URL}
-    driver-class-name: com.mysql.cj.jdbc.Driver 
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+  profiles:
+    active: prod  # EC2 서버는 prod, 로컬에서 개발할 땐 dev로
+# 공통 설정 (모든 profile에서 공통으로 사용되는 설정)
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
     properties:
       hibernate:
         format_sql: true
@@ -23,10 +12,4 @@ spring:
     throw-exception-if-no-handler-found: true
   web:
     resources:
-       add-mappings: true
-  mail:
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-app:
-  jwtSecret: ${JWT_SECRET}
-  jwtExpirationInMs: 86400000
+      add-mappings: true

@@ -72,7 +72,7 @@ function SignUp() {
       return;
     }
     try {
-      const response = await api.post("/auth/check-userid", { userId });
+              const response = await api.post("/auth/check-userid", { userId });
       if (response.data.exists) {
         setErrors({ ...errors, userId: "이미 사용 중인 아이디입니다." });
         setIsIdChecked(false);
@@ -92,7 +92,7 @@ function SignUp() {
         return;
     }
     try {
-      const response = await api.post("/auth/check-username", { username });
+              const response = await api.post("/auth/check-username", { username });
       if (response.data.exists) {
         setErrors({ ...errors, username: "이미 사용 중인 이름입니다." });
         setIsUsernameChecked(false);

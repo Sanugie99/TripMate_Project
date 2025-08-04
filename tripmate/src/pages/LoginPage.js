@@ -54,7 +54,7 @@ const FindAccountModal = ({ type, onClose }) => {
       return;
     }
     try {
-      const response = await api.post("/auth/find-id", { username, email });
+              const response = await api.post("/auth/find-id", { username, email });
       alert(`회원님의 아이디는 [ ${response.data.userId} ] 입니다.`);
       onClose();
     } catch (error) {
@@ -69,7 +69,7 @@ const FindAccountModal = ({ type, onClose }) => {
     }
     try {
       // API 엔드포인트 및 요청 데이터 수정
-      await api.post("/auth/find-password", { userId, email });
+              await api.post("/auth/find-password", { userId, email });
       alert("임시 비밀번호가 이메일로 발송되었습니다. 로그인 후 비밀번호를 변경해주세요.");
       onClose();
     } catch (error) {

@@ -14,6 +14,18 @@ import java.io.IOException;
 public class WebConfig implements WebMvcConfigurer {
 
 	@Override
+	public void addCorsMappings(CorsRegistry registry) {
+		registry.addMapping("/**")
+				.allowedOrigins(
+					"https://www.tripmateweb.store",
+					"https://tripmateweb.store"
+				)
+				.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+				.allowedHeaders("*")
+				.allowCredentials(true);
+	}
+
+	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		registry.addResourceHandler("/**").addResourceLocations("classpath:/static/").resourceChain(true)
 				.addResolver(new PathResourceResolver() {

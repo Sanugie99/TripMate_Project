@@ -3,7 +3,16 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/index';
-import { fetchSchedules, fetchSharedSchedules, fetchUserProfile, shareSchedule, unshareSchedule, fetchSavedSchedules } from '../api/UserApi';
+import { 
+  fetchSchedules, 
+  fetchSharedSchedules, 
+  fetchUserProfile, 
+  shareSchedule, 
+  unshareSchedule, 
+  fetchSavedSchedules,
+  updateUserProfile,
+  deleteUserAccount
+} from '../api/UserApi';
 import ScheduleEditModal from './ScheduleDetail'; // ScheduleEditModal을 import (export 필요)
 
 // Styled Components (omitted for brevity, they are correct)
@@ -248,7 +257,7 @@ function Mypage() {
     if (!isOwner) return;
     if (window.confirm('정말로 회원 탈퇴를 하시겠습니까?')) {
       try {
-        await api.delete('/users/me');
+        await deleteUserAccount();
         logout();
         alert('회원 탈퇴가 완료되었습니다.');
         navigate('/');
@@ -262,7 +271,7 @@ function Mypage() {
     if (!isOwner) return;
     if (window.confirm('정말로 이 여행 계획을 삭제하시겠습니까?')) {
       try {
-        await api.delete(`/schedule/${scheduleId}`);
+                    await api.delete(`/schedule/${scheduleId}`);
         setMySchedules(mySchedules.filter(schedule => schedule.id !== scheduleId));
         alert('여행 계획이 삭제되었습니다.');
       } catch (error) {
@@ -304,7 +313,7 @@ function Mypage() {
       if (editPassword) {
         updateData.password = editPassword;
       }
-      await api.put('/auth/profile', updateData);
+      await updateUserProfile(updateData);
       alert('프로필 정보가 성공적으로 업데이트되었습니다.');
       
       // Correctly reload the profile and all associated data
@@ -339,7 +348,7 @@ function Mypage() {
     try {
       if (isFromDB) {
         // DB에서 찜한 일정 삭제
-        await api.delete(`/schedule/saved/${scheduleId}`);
+                    await api.delete(`/schedule/saved/${scheduleId}`);
         setSavedSchedules(prev => prev.filter(s => s.id !== scheduleId));
       } else {
         // localStorage에서 찜한 일정 삭제

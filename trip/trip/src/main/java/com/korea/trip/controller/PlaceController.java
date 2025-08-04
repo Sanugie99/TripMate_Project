@@ -20,7 +20,7 @@ import com.korea.trip.util.KakaoPlaceUtil;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/place")
+@RequestMapping("/api/place")
 @RequiredArgsConstructor
 public class PlaceController {
 

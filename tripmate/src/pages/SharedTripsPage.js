@@ -199,7 +199,7 @@ function SharedTripsPage() {
                                     <PhotoGrid>
                                         {schedule.photos.map((photo) => (
                                             <PhotoItem key={photo.id}>
-                                                <img src={`http://localhost:10000${photo.imageUrl}`} alt="Schedule Photo" onError={e => e.target.src = '/icons/tourist.png'} />
+                                                <img src={`${process.env.REACT_APP_API_BASE_URL || ''}${photo.imageUrl}`} alt="Schedule Photo" onError={e => e.target.src = '/icons/tourist.png'} />
                                             </PhotoItem>
                                         ))}
                                     </PhotoGrid>

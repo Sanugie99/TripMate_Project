@@ -11,12 +11,7 @@ const TransportResultCard = () => {
     const fetchTransportData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(getSeoulToBusanTransport(), {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
+        const data = await getSeoulToBusanTransport();
         setTransportData(data);
         setError(null);
       } catch (err) {
