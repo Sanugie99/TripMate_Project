@@ -5,7 +5,7 @@
 
 - **개발 기간**: 2025.06.30 ~ 2025.07.15  
 - **배포 기간**: 2025.07.15 ~ 2025.07.19  
-- **배포 링크**: [https://app.tripmateweb.store](https://app.tripmateweb.store)
+- **배포 링크**: [https://www.tripmateweb.store](https://www.tripmateweb.store)
 
 ---
 
