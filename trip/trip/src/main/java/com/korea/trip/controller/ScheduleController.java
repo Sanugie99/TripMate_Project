@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/schedule")
-
+@CrossOrigin(origins = {"https://www.tripmateweb.store", "https://tripmateweb.store"}, allowCredentials = "true")
 public class ScheduleController {
 
 	private final ScheduleService scheduleService;

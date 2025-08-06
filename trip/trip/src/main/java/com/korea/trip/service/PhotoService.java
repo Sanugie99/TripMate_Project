@@ -20,7 +20,7 @@ public class PhotoService {
 
     private final PhotoRepository photoRepository;
     private final ScheduleRepository scheduleRepository;
-    private final String uploadDir = "./uploads"; // 사진 저장 경로
+    private final String uploadDir = "/home/ec2-user/uploads";
 
     @Autowired
     public PhotoService(PhotoRepository photoRepository, ScheduleRepository scheduleRepository) {

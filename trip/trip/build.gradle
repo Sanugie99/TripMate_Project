@@ -11,6 +11,10 @@ java {
 	sourceCompatibility = '17'
 }
 
+springBoot {
+	mainClass = 'com.korea.trip.TripApplication'
+}
+
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
@@ -27,12 +31,16 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-mail' // 이메일 의존성 추가
+	implementation 'org.springframework.boot:spring-boot-starter-logging' // 로깅 의존성 추가
+	implementation 'ch.qos.logback:logback-classic:1.4.11' // Logback 의존성 추가
+	implementation 'ch.qos.logback:logback-core:1.4.11' // Logback 코어 의존성 추가
+	implementation 'org.slf4j:slf4j-api:2.0.9' // SLF4J API 의존성 추가
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.mysql:mysql-connector-j'
+	implementation 'com.mysql:mysql-connector-j:8.0.33'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
@@ -40,4 +48,20 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.named('processResources') {
+    from(sourceSets.main.resources.srcDirs) {
+        include '**/*.yml'
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+}
+
+// JAR 빌드 시 모든 의존성 포함 보장
+jar {
+    enabled = false
+}
+
+bootJar {
+    archiveClassifier = ''
 }

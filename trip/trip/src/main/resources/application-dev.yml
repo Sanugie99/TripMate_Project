@@ -1,0 +1,27 @@
+server:
+  port: 5000
+
+korail:
+  service-key: local-korail-key
+
+bus:
+  service-key: local-bus-key
+
+kakao:
+  api-key: 
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/tripmate_db
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: local-password
+  jpa:
+    show-sql: true
+  mail:
+    username: local@gmail.com
+    password: local-mail-password
+
+app:
+  jwtSecret: dev-jwt-secret
+  jwtExpirationInMs: 86400000 

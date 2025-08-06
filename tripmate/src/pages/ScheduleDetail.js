@@ -390,7 +390,7 @@ function ScheduleDetailFull() {
     try {
       setLoading(true);
       const [scheduleRes, reviewsRes] = await Promise.all([
-        api.get(`/schedule/${id}?t=${Date.now()}`),
+                    api.get(`/schedule/${id}?t=${Date.now()}`),
         getReviewsBySchedule(id)
       ]);
       setSanitizedSchedule(scheduleRes.data);
@@ -476,7 +476,7 @@ function ScheduleDetailFull() {
 
   const handleCopySchedule = async () => {
     try {
-      const res = await api.post(`/schedule/copy/${schedule.id}`);
+              const res = await api.post(`/schedule/copy/${schedule.id}`);
       setSchedule(prev => ({ ...prev, shared: res.data.shared }));
       alert('성공적으로 찜한 여행 일정에 추가되었습니다!');
       if (window.confirm('내가 찜한 여행계획으로 이동하시겠습니까?')) {
@@ -493,7 +493,7 @@ function ScheduleDetailFull() {
 
   const handleLike = async () => {
     try {
-      const res = await api.post(`/schedule/${id}/like`);
+              const res = await api.post(`/schedule/${id}/like`);
       setSchedule(prev => ({ ...prev, likes: res.data.likes, dislikes: res.data.dislikes }));
     } catch (err) {
       fetchFromServer();
@@ -502,7 +502,7 @@ function ScheduleDetailFull() {
 
   const handleDislike = async () => {
     try {
-      const res = await api.post(`/schedule/${id}/dislike`);
+              const res = await api.post(`/schedule/${id}/dislike`);
       setSchedule(prev => ({ ...prev, likes: res.data.likes, dislikes: res.data.dislikes }));
       alert("싫어요!");
     } catch (err) {

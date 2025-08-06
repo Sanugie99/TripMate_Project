@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const KAKAO_API_KEY = "1bf61ebd329fb75d565cfa8dcb9ab263";
+const KAKAO_API_KEY = process.env.REACT_APP_KAKAO_API_KEY;
 
 export const searchPlacesByKeyword = async (keyword) => {
   if (!keyword || !keyword.trim()) {
@@ -13,7 +13,8 @@ export const searchPlacesByKeyword = async (keyword) => {
       params: { query: keyword.trim() },
       headers: {
         Authorization: `KakaoAK ${KAKAO_API_KEY}`,
-      },
+        'KA': 'origin=tripmate'
+      }
     });
     return res.data.documents;
   } catch (error) {

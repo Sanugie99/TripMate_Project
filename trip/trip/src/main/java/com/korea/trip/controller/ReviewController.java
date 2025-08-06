@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reviews")
+@CrossOrigin(origins = {"https://www.tripmateweb.store", "https://tripmateweb.store"}, allowCredentials = "true")
 public class ReviewController {
 
     private final ReviewService reviewService;

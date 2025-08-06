@@ -271,7 +271,7 @@ function Mypage() {
     if (!isOwner) return;
     if (window.confirm('정말로 이 여행 계획을 삭제하시겠습니까?')) {
       try {
-        await api.delete(`/schedule/${scheduleId}`);
+                    await api.delete(`/schedule/${scheduleId}`);
         setMySchedules(mySchedules.filter(schedule => schedule.id !== scheduleId));
         alert('여행 계획이 삭제되었습니다.');
       } catch (error) {
@@ -348,7 +348,7 @@ function Mypage() {
     try {
       if (isFromDB) {
         // DB에서 찜한 일정 삭제
-        await api.delete(`/schedule/saved/${scheduleId}`);
+                    await api.delete(`/schedule/saved/${scheduleId}`);
         setSavedSchedules(prev => prev.filter(s => s.id !== scheduleId));
       } else {
         // localStorage에서 찜한 일정 삭제
