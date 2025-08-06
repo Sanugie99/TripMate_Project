@@ -13,7 +13,8 @@ export const searchPlacesByKeyword = async (keyword) => {
       params: { query: keyword.trim() },
       headers: {
         Authorization: `KakaoAK ${KAKAO_API_KEY}`,
-      },
+        'KA': 'origin=tripmate'
+      }
     });
     return res.data.documents;
   } catch (error) {

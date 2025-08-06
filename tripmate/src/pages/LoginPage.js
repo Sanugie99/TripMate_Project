@@ -145,8 +145,8 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [loginData, setLoginData] = useState({
-    userId: "",
-    password: "",
+    userId: "test",
+    password: "test1234@",
   });
   const [errorMsg, setErrorMsg] = useState("");
   const [failCount, setFailCount] = useState(0);

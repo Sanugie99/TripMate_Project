@@ -8,7 +8,7 @@ bus:
   service-key: local-bus-key
 
 kakao:
-  api-key: 75b9d465dafe36acf72ccc6fd1a64aa1
+  api-key: 
 
 spring:
   datasource:
